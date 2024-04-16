@@ -1,7 +1,7 @@
 {
     "type": "package",
     "name": "miniBill/elm-review-no-broken-elm-parser-functions",
-    "summary": "",
+    "summary": " Provides elm-review rules to check for usage of broken elm/parser functions.",
     "license": "BSD-3-Clause",
     "version": "1.0.0",
     "exposed-modules": ["NoBrokenParserFunctions"],
