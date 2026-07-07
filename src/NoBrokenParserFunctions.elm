@@ -36,7 +36,7 @@ initialContext =
 expressionVisitor : Node Expression -> Context -> ( List (Error {}), Context )
 expressionVisitor ((Node range expression) as node) context =
     case expression of
-        Expression.FunctionOrValue _ name ->
+        Expression.FunctionOrValue localModuleName name ->
             if List.member name brokenFunctions then
                 let
                     moduleName : ModuleName
@@ -45,14 +45,29 @@ expressionVisitor ((Node range expression) as node) context =
                             |> Maybe.withDefault []
                 in
                 if moduleName == [ "Parser" ] || moduleName == [ "Parser", "Advanced" ] then
-                    ( [ Rule.error
-                            { message = "Do not use " ++ String.join "." moduleName ++ "." ++ name
-                            , details = [ "That function desyncs the parser's internal state. Use one of the functions from pithub/elm-parser-bug-workaround instead." ]
-                            }
-                            range
-                      ]
-                    , context
-                    )
+                    case name of
+                        "int" ->
+                            ( [ Rule.error
+                                    { message = "Do not use " ++ String.join "." moduleName ++ "." ++ name
+                                    , details =
+                                        [ "That function is based on one which parsing floats, which means that it has surprising behaviors around `e` and `.`."
+                                        , "Use `" ++ String.join "." (localModuleName ++ [ "chompWhile" ]) ++ " Char.isDigit` instead."
+                                        ]
+                                    }
+                                    range
+                              ]
+                            , context
+                            )
+
+                        _ ->
+                            ( [ Rule.error
+                                    { message = "Do not use " ++ String.join "." moduleName ++ "." ++ name
+                                    , details = [ "That function desyncs the parser's internal state. Use one of the functions from pithub/elm-parser-bug-workaround instead." ]
+                                    }
+                                    range
+                              ]
+                            , context
+                            )
 
                 else
                     ( [], context )
@@ -66,4 +81,4 @@ expressionVisitor ((Node range expression) as node) context =
 
 brokenFunctions : List String
 brokenFunctions =
-    [ "lineComment", "multiComment", "chompUntil", "chompUntilEndOr" ]
+    [ "lineComment", "multiComment", "chompUntil", "chompUntilEndOr", "int" ]
